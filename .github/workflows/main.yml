@@ -1,0 +1,32 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+    runs-on: ubuntu-latest
+    env:
+      DB_USER: postgres
+      DB_PASSWORD: password
+      RAILS_ENV: test
+      RUBY_ENV: test
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.3.0
+    - name: Build and test with RSpec
+      run: |
+        gem install bundler
+        bundle install --jobs 4 --retry 3
+        rails db:create
+        rails db:migrate
+        bundle exec rspec
